@@ -1,0 +1,40 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "version": "1.0.0",
+    "title": "Home Safe Home Swagger",
+    "description": "",
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/api",
+      "description": "Dev Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "x-access-token": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-access-token",
+        "description": "x-access-token"
+      },
+      "x-refresh-token": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-refresh-token",
+        "description": "x-refresh-token"
+      }
+    }
+  },
+  "security": [
+    {
+      "x-access-token": [],
+      "x-refresh-token": []
+    }
+  ]
+}

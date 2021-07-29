@@ -1,0 +1,14 @@
+@startuml
+Gadget -> Events: postNewEvent(signalId, serialNumber, value)
+Events -> Devices: findDeviceIdBySerialNumber(serialNumber)
+Devices -> Events: return deviceId
+Events -> Devices: modifyDeviceStatusAndLastConnection(deviceId, statusDevice.ONLINE)
+Events -> Events: shouldNotCreateEventAndNotify(signalId, devicePreviousStatus)
+alt signalId == signals.ONLINE && devicePreviousStatus == statusDevice.ONLINE
+  Events -> Gadget: return message = 'Se actualizó el estado y la última conexión del dispositivo'
+else
+  Events -> EventsModel: createEvent(deviceId, value, createdAt, updatedAt, deletionDate)
+  Events -> Notifications: asyncCreateNotification(deviceId, value, createdAt, updatedAt, deletionDate)
+  Events -> Gadget: return newEvent = {deviceId, value, createdAt, updatedAt, deletionDate}
+end
+@enduml

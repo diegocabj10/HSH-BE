@@ -1,4 +1,4 @@
-const validateIdQueryParam = (schema) => {
+const validateIdParam = (schema) => {
   return (req, res, next) => {
     const { error, value } = schema.validate(req.params);
     if (error) {
@@ -22,4 +22,4 @@ const validateBody = (schema) => {
     next();
   };
 };
-module.exports = { validateIdQueryParam, validateBody };
+module.exports = { validateIdParam, validateBody };

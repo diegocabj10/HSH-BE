@@ -1,0 +1,19 @@
+@startuml addContact
+Front -> ContactTypes: getlistall()
+Front -> MyDevices: getlistall(userId)
+MyDevices -> userProfileDeviceModel: getMyDevices(userId)
+Front -> MyContacts: postmycontacts(email, phone, name, lastName, deviceId, contactTypeId)
+MyContacts -> Devices: validateDeviceExistByDeviceId(deviceId)
+Devices -> MyContacts: return existingDevice
+MyContacts -> MyContacts: getProfileIdByContactTypeIdAndUsageTypeId(contactTypeId, existingDevice.usageTypeId): profileId
+MyContacts -> Users: findOrCreateUser(email, phone, name, lastName)
+Users -> userModel: findOrCreate(email, phone, name, lastName)
+Users -> MyContacts: return userId
+MyContacts -> userProfileDeviceModel: findOrCreate(profileId, deviceId, userId)
+alt userProfileDevice created
+  MyContacts -> UserNotificationsSettings: enabledAllUserNotifications(userProfileDeviceId)
+  MyContacts -> Front: return newUserProfileDevice
+else userProfileDevice found
+  MyContacts -> Front: return UserProfileDevice
+end
+@enduml

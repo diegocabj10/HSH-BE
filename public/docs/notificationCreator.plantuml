@@ -1,0 +1,17 @@
+@startuml newNotification
+Events -> Notifications: createNotification(newEvent.id, newEvent.signalId, newEvent.deviceId, newEvent.value)
+Notifications -> NotificationsSettingsController: existsNotificationSettingForSignal(signalId, value)
+NotificationsSettingsController -> Notifications: return NotificationSetting
+alt Notification Setting is null
+  Notifications -> Notifications: return
+else Exist Notification Setting with title and message
+  Notifications -> MyDevices: findAllUsersAndProfilesFromDeviceId(deviceId)
+  MyDevices -> Notifications: return usersAndProfilesOfThatDevice
+  loop while userAndProfile
+    Notifications -> UserNotificationSetting: getUserNotificationSetting(userAndProfile.id, signalId)
+    alt userNotificationSetting.status === userNotificationStatus.ON
+      Notifications -> NotificationsModel: create(eventId, title, message, userAndProfile.userId)
+    end
+  end
+end
+@enduml

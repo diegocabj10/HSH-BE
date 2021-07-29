@@ -1,0 +1,6 @@
+@startuml newDevice
+SystemAdmin -> UsageType: getAllUsageTypes()
+UsageType -> SystemAdmin: return UsageTypes
+SystemAdmin -> Devices: postNewDevice(serialNumber, usageTypeId)
+Devices -> SystemAdmin: return newDevice
+@enduml

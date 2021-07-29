@@ -1,19 +1,17 @@
 const claimModel = require("./claims.model");
 const { getPagination, getPagingData } = require("../../Shared/pagination");
-const dbConfig = require("../../../config/db.config");
+const dbConfig = require("../../../config/database");
 const Op = dbConfig.Sequelize.Op;
 
 // Create and Save a new claim
 exports.create = async (req, res) => {
   try {
-
-    //Antes de crear el reclamo buscar el usuario del adminsitrador asi seteamos como userId el usuario del administrador
     // Create and save a claim
     const newClaim = await claimModel.create({
-      date: new Date(),
       title: req.body.title,
       message: req.body.message,
-      administratorUserId: req.body.userId,
+      claimantUserId: req.body.userId,
+      deviceId: req.body.deviceId,
     });
     res.send(newClaim);
   } catch (err) {
@@ -25,8 +23,7 @@ exports.create = async (req, res) => {
 exports.findAll = async (req, res) => {
   const { page, size, title } = req.query;
   let condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
-  //TODO buscar que perfil sos y en base a eso obtener el usuario del administrador asi filtramos los reclamos en base al id del usuario administrador
-  // condition = { ...condition, userId: req.body.userId };
+  condition = { ...condition, deletionDate: { [Op.or]: { [Op.gte]: new Date(), [Op.is]: null } } };
 
   try {
     const { limit, offset } = getPagination(page, size);
@@ -34,7 +31,7 @@ exports.findAll = async (req, res) => {
       where: condition,
       limit,
       offset,
-      order: [['date', 'DESC']],
+      order: [['createdAt', 'DESC']],
     });
     const response = getPagingData(data, page, limit);
     res.send(response);
@@ -53,11 +50,12 @@ exports.findOne = async (req, res) => {
   }
 };
 
-// Patch a claim by the id in the request
+// Patch a response claim by the id in the request
 exports.patch = async (req, res) => {
   try {
     const claimPatched = await claimModel.update(
       {
+        respondentUserId: req.body.userId,
         response: req.body.response,
       },
       {
@@ -94,6 +92,38 @@ exports.delete = async (req, res) => {
       where: { id: req.params.id },
     });
     res.send(data);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+//Patch a claim to expire it with deletionDate
+exports.expire = async (req, res) => {
+  try {
+    const claimPatched = await claimModel.update(
+      {
+        deletionDate: new Date(),
+      },
+      {
+        where: { id: req.params.id },
+      }
+    );
+    res.send(claimPatched);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+//Counts all active claims
+exports.countAll = async (req, res) => {
+  try {
+    const totalItems = await claimModel.count({
+      where: {
+        //[Op.or]: { contactUserId: req.body.userId, ownerUserId: req.body.userId },
+        deletionDate: { [Op.or]: { [Op.gte]: new Date(), [Op.is]: null } }
+      }
+    });
+    return totalItems;
   } catch (err) {
     res.status(500).send({ message: err.message });
   }

@@ -1,27 +1,21 @@
-const jwt = require('jsonwebtoken');
-const { validateUserExist } = require('../../Features/Users/users.controller');
+const { validateUserCredentials } = require('../../Features/Users/users.controller');
 const {
   createSession,
-  validateRefreshTokenExist,
-} = require('../../Features/Sessions/sessions.controller');
-//Login an user
+} = require('./Sessions/sessions.controller');
+
+const {
+  generateAccessToken,
+  generateRefreshToken
+} = require('../Authentications/Jwt/utils');
+
 const login = async (req, res) => {
   try {
-    const userExist = await validateUserExist(req, res);
+    const userExist = await validateUserCredentials(req, res);
 
-    const payload = userExist;
+    let accessToken = await generateAccessToken(userExist);
+    let refreshToken = await generateRefreshToken(userExist);
 
-    let accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-      algorithm: 'HS256',
-      expiresIn: process.env.ACCESS_TOKEN_LIFE,
-    });
-
-    let refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-      algorithm: 'HS256',
-      expiresIn: process.env.REFRESH_TOKEN_LIFE,
-    });
-
-    const session = await createSession(userExist.id, refreshToken);
+    const session = await createSession(userExist.userLogged.id, refreshToken);
 
     res.set({
       'x-access-token': accessToken,
@@ -33,50 +27,9 @@ const login = async (req, res) => {
         'Successfully authenticated. The accessToken and refreshToken are returned in two headers name x-access-token and x-refresh-token.'
     });
   } catch (err) {
-    res.status(401).send({ message: err.message });
+    res.status(res.statusCode || 500);
+    res.send({ message: err.message });
   }
-};
-
-const refresh = async (req, res) => {
-  let accessToken = req.headers['x-access-token'];
-  let refreshToken = req.headers['x-refresh-token'];
-
-  if (!accessToken || !refreshToken) {
-    return res.status(403).send();
-  }
-
-  try {
-    const payloadAccessToken = jwt.verify(
-      accessToken,
-      process.env.ACCESS_TOKEN_SECRET
-    );
-    const payloadRefreshToken = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET
-    );
-  } catch (err) {
-    res.status(401).send({ message: err.message });
-  }
-
-  //retrieve the refresh token from the DB...
-  // let refreshToken = ''
-  const refreshTokenExist = await validateRefreshTokenExist(
-    payloadRefreshToken.id,
-    refreshToken
-  );
-
-  if (!refreshTokenExist) return res.status(404).send('Refresh token does not exist');
-
-  let newToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-    algorithm: 'HS256',
-    expiresIn: process.env.ACCESS_TOKEN_LIFE,
-  });
-
-  res.set({
-    'x-access-token': accessToken,
-    'x-refresh-token': refreshToken
-  });
-  res.send();
 };
 
 module.exports = { login };

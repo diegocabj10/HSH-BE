@@ -1,0 +1,15 @@
+@startuml
+Front -> Notices: getNotices(userId)
+Front <-- Notices: allNotices
+
+Front -> Notices: postCanAddNotice(userId)
+Notices -> Notices: findEndpointId(): endpointId
+
+Notices -> Authorization: canDoThat(userId, endpointId)
+Authorization -> permissionsByProfiles: getProfilesWithThatEndpoint(endpointId)
+Authorization <-- permissionsByProfiles: profilesList
+Authorization -> UserProfilesForDevices: hasDevicesByProfile(userId, profilesList): devicesList
+Authorization <-- UserProfilesForDevices: devicesList
+Notices <-- Authorization: devicesList
+Front <-- Notices: devicesList
+@enduml

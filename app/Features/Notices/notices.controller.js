@@ -1,4 +1,4 @@
-const dbConfig = require("../../../config/db.config");
+const dbConfig = require("../../../config/database");
 const noticeModel = require('./notices.model');
 const { getPagination, getPagingData } = require("../../Shared/pagination");
 const Op = dbConfig.Sequelize.Op;
@@ -8,12 +8,12 @@ exports.create = async (req, res) => {
   try {
     // Create and save a notice
     const newNotice = await noticeModel.create({
-      date: new Date(),
       title: req.body.title,
       message: req.body.message,
-      administratorUserId: req.body.userId,
+      noticerUserId: req.body.userId,
+      deviceId: req.body.deviceId,
     });
-    res.send(newClaim);
+    res.send(newNotice);
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -22,16 +22,15 @@ exports.create = async (req, res) => {
 // Retrieve all notices from the database.
 exports.findAll = async (req, res) => {
   const { page, size, title, message } = req.query;
-  var condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
-  //TODO buscar en base al usuario que esta logueado quien es su administrador y en base a eso filtrar los avisos por administratorUserId
-  // condition = { ...condition, administratorUserId: req.body.userId };
+  let condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
+  condition = { ...condition, deletionDate: { [Op.or] : { [Op.gte]: new Date(), [Op.is]: null }} };
   try {
     const { limit, offset } = getPagination(page, size);
     const data = await noticeModel.findAndCountAll({
       where: condition,
       limit,
       offset,
-      order:[['date','DESC']],
+      order:[['createdAt','DESC']],
     });
     const response = getPagingData(data, page, limit);
     res.send(response);
@@ -53,7 +52,7 @@ exports.findOne = async (req, res) => {
 // Update a notice by the id in the request
 exports.update = async (req, res) => {
   try {
-    const claimUpdated = await noticeModel.update(
+    const noticeUpdated = await noticeModel.update(
       {
         title: req.body.title,
         message: req.body.message,
@@ -63,7 +62,7 @@ exports.update = async (req, res) => {
         where: { id: req.params.id },
       }
     );
-    res.send(claimUpdated);
+    res.send(noticeUpdated);
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -72,12 +71,43 @@ exports.update = async (req, res) => {
 // Delete a notice with the specified id in the request
 exports.delete = async (req, res) => {
   try {
-    const data = await claimModel.destroy({
+    const noticeDeleted = await noticeModel.destroy({
       where: { id: req.params.id },
     });
-    res.send(data);
+    res.send(noticeDeleted);
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
 };
 
+//Patch a notice to expire it with deletionDate
+exports.expire = async (req, res) => {
+  try {
+    const noticePatched = await noticeModel.update(
+      {
+        deletionDate: new Date(),
+      },
+      {
+        where: { id: req.params.id },
+      }
+    );
+    res.send(noticePatched);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+//Counts all active notices
+exports.countAll = async (req, res) => {
+  try {
+    const totalItems = await noticeModel.count({
+      where: {
+        //[Op.or]: { contactUserId: req.body.userId, ownerUserId: req.body.userId },
+        deletionDate: { [Op.or]: { [Op.gte]: new Date(), [Op.is]: null } }
+      }
+    });
+    return totalItems;
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};

@@ -1,13 +1,13 @@
 const notices = require("./notices.controller");
 const router = require("express").Router();
 const {
-  validateIdQueryParam,
+  validateIdParam,
   validateBody,
 } = require("../../Shared/validationRequest");
 const {
   schemaCreateNotice,
   schemaUpdateNotice,
-  schemaIdQueryParams,
+  schemaIdParam,
 } = require("./notices.schemas");
 
 // Create a new user
@@ -22,11 +22,17 @@ router.get("/:id", notices.findOne);
 // Update a user with id
 router.put(
   "/:id",
-  [validateIdQueryParam(schemaIdQueryParams), validateBody(schemaUpdateNotice)],
+  [validateIdParam(schemaIdParam), validateBody(schemaUpdateNotice)],
   notices.update
 );
 
 // Delete a user with id
 router.delete("/:id", notices.delete);
+
+// Patch a notice to expire it
+router.patch("/expires/:id",
+  [validateIdParam(schemaIdParam)],
+  notices.expire
+);
 
 module.exports = router;

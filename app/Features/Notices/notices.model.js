@@ -1,57 +1,34 @@
 const Sequelize = require("sequelize");
-const dbConfig = require("../../../config/db.config");
+const dbConfig = require("../../../config/database");
 const usersModel = require("../Users/users.model");
-const { formatDate } = require('../../Shared/dateFormatter');
+const deviceModel = require("../../Core/Devices/devices.model");
 
 const Notice = dbConfig.define("Notices", {
-  date: {
-    type: Sequelize.DATE,
-    get: function (fieldName) {
-      const formattedDate = formatDate(this.getDataValue(fieldName));
-      return formattedDate ? formattedDate : null;
-    },
-  },
   title: {
     type: Sequelize.STRING,
   },
   message: {
     type: Sequelize.STRING,
   },
-  administratorUserId: {
-    type: Sequelize.INTEGER,
-    references: {
-      model: usersModel,
-      key: "id",
-    },
-    allowNull: false,
-  },
   readDate: {
     type: Sequelize.DATE,
-    get: function (fieldName) {
-      const formattedDate = formatDate(this.getDataValue(fieldName));
-      return formattedDate ? formattedDate : null;
-    },
+
   },
   deletionDate: {
     type: Sequelize.DATE,
-    get: function (fieldName) {
-      const formattedDate = formatDate(this.getDataValue(fieldName));
-      return formattedDate ? formattedDate : null;
-    },
+
   },
   createdAt: {
     type: Sequelize.DATE,
-    get: function (fieldName) {
-      const formattedDate = formatDate(this.getDataValue(fieldName));
-      return formattedDate ? formattedDate : null;
-    },
+
   },
   updatedAt: {
     type: Sequelize.DATE,
-    get: function (fieldName) {
-      const formattedDate = formatDate(this.getDataValue(fieldName));
-      return formattedDate ? formattedDate : null;
-    },
+
   },
 });
+
+Notice.belongsTo(usersModel, { foreignKey: { name: 'noticerUserId', allowNull: true } });
+Notice.belongsTo(deviceModel, { foreignKey: { name: 'deviceId', allowNull: false } });
+
 module.exports = Notice;

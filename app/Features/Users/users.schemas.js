@@ -2,24 +2,32 @@ const joi = require("joi");
 
 const schemaCreateUser = joi.object({
   email: joi.string().email().required(),
-  password: joi.string().alphanum().min(3).max(30).required(),
-  name: joi.string().alphanum().min(3).max(500).required(),
-  lastName: joi.string().alphanum().min(3).max(500).required(),
+  phone: joi.string().required(),
+  password: joi.string().required(),
+  name: joi.string().required(),
+  lastName: joi.string().required(),
 });
 
 const schemaUpdateUser = joi.object({
   email: joi.string().email().required(),
-  password: joi.string().alphanum().min(3).max(30).required(),
-  name: joi.string().alphanum().min(3).max(500).required(),
-  lastName: joi.string().alphanum().min(3).max(500).required(),
+  phone: joi.string().required(),
+  password: joi.string().required(),
+  name: joi.string().required(),
+  lastName: joi.string().required(),
 });
 
-const schemaIdQueryParams = joi.object().keys({
+const schemaPatchUser = joi.object({
+  password: joi.string().required(),
+  userId: joi.number(),
+});
+
+const schemaIdParam = joi.object().keys({
   id: joi.string().required(),
 });
 
 module.exports = {
   schemaCreateUser,
   schemaUpdateUser,
-  schemaIdQueryParams,
+  schemaPatchUser,
+  schemaIdParam,
 };

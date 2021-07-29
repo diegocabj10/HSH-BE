@@ -1,0 +1,11 @@
+@startuml addNewUser
+Front -> Users: postUsers(email, password, phone, name, lastName)
+Users -> ModelUsers: create(email, password, phone, name, lastName)
+alt user created
+  ModelUsers -> Users: return user created
+  Users -> Front: return newUser
+else existing user found
+  ModelUsers -> Users: return Sequelize Unique Constraint Error
+  Users -> Front: return 400 with error message
+end
+@enduml

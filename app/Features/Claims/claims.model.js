@@ -1,17 +1,9 @@
 const Sequelize = require('sequelize');
-const dbConfig = require("../../../config/db.config");
+const dbConfig = require("../../../config/database");
 const usersModel = require('../Users/users.model');
-const { formatDate } = require('../../Shared/dateFormatter');
-
+const deviceModel = require("../../Core/Devices/devices.model");
 
 const Claim = dbConfig.define('Claims', {
-    date: {
-        type: Sequelize.DATE,
-        get: function (fieldName) {
-            const formattedDate = formatDate(this.getDataValue(fieldName));
-            return formattedDate ? formattedDate : null;
-        },
-    },
     title: {
         type: Sequelize.STRING
     },
@@ -21,34 +13,19 @@ const Claim = dbConfig.define('Claims', {
     response: {
         type: Sequelize.STRING
     },
-    administratorUserId: {
-        type: Sequelize.INTEGER,
-        references: {
-            model: usersModel,
-            key: 'id'
-        },
-        allowNull: false
-    },
     deletionDate: {
         type: Sequelize.DATE,
-        get: function (fieldName) {
-            const formattedDate = formatDate(this.getDataValue(fieldName));
-            return formattedDate ? formattedDate : null;
-        },
     },
     createdAt: {
         type: Sequelize.DATE,
-        get: function (fieldName) {
-            const formattedDate = formatDate(this.getDataValue(fieldName));
-            return formattedDate ? formattedDate : null;
-        },
     },
     updatedAt: {
         type: Sequelize.DATE,
-        get: function (fieldName) {
-            const formattedDate = formatDate(this.getDataValue(fieldName));
-            return formattedDate ? formattedDate : null;
-        },
     },
 });
+
+Claim.belongsTo(usersModel, { foreignKey: { name: 'claimantUserId', allowNull: false } });
+Claim.belongsTo(usersModel, { foreignKey: { name: 'respondentUserId', allowNull: true } });
+Claim.belongsTo(deviceModel, { foreignKey: { name: 'deviceId', allowNull: false } });
+
 module.exports = Claim;

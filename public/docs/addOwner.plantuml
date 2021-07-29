@@ -1,0 +1,13 @@
+@startuml addOwner
+Front -> MyDevices: postmydevices(serialNumber,pin,userId)
+MyDevices -> Devices: validateDeviceExistBySerialNumberAndPin(serialNumber,pin)
+Devices -> MyDevices: return existingDevice
+MyDevices -> MyDevices: getProfileIdByUsageTypeId(existingDevice.usageTypeId): profileId
+MyDevices -> userProfileDeviceModel: findOrCreate(profileId, deviceId, userId)
+alt userProfileDevice created
+  MyDevices -> UserNotificationsSettings: enabledAllUserNotifications(userProfileDeviceId)
+  MyDevices -> Front: return newUserProfileDevice
+else userProfileDevice found
+  MyDevices -> Front: return UserProfileDevice
+end
+@enduml
